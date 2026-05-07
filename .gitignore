@@ -1,0 +1,10 @@
+.linkedin_cookies.json
+.linkedintel_config.json
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.csv
