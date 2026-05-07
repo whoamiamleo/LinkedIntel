@@ -473,22 +473,23 @@ def headful_login(browser: _Browser, reuse_cookies: bool = True) -> list[dict]:
     driver = make_driver(browser, headless=False)
     driver.get(LINKEDIN_LOGIN)
 
-    # Poll until the feed URL appears (login complete)
-    poll_interval = 3
-    while True:
-        try:
-            url = driver.current_url
-        except WebDriverException:
-            break
-        if "feed" in url or "mynetwork" in url or "/home" in url:
-            break
-        time.sleep(poll_interval)
+    try:
+        # Poll until the feed URL appears (login complete)
+        poll_interval = 3
+        while True:
+            try:
+                url = driver.current_url
+            except WebDriverException:
+                break
+            if "feed" in url or "mynetwork" in url or "/home" in url:
+                break
+            time.sleep(poll_interval)
 
-    print("[w00t] Login detected!")
-    save_cookies(driver, COOKIES_FILE)
-    cookies = driver.get_cookies()
-    driver.quit()
-    return cookies
+        print("[w00t] Login detected!")
+        save_cookies(driver, COOKIES_FILE)
+        return driver.get_cookies()
+    finally:
+        driver.quit()
 
 
 # ── Phase 2: resolve company → numeric ID ────────────────────────────────────
@@ -928,6 +929,7 @@ def main() -> None:
         if _session_invalid(driver):
             print("[ERROR] Cookies are invalid or session has expired.")
             driver.quit()
+            driver = None
             if cookie_path.exists():
                 cookie_path.unlink()
                 print(f"[INFO] Removed stale cookie file: {cookie_path}")
@@ -964,7 +966,8 @@ def main() -> None:
             sys.exit(1)
 
     finally:
-        driver.quit()
+        if driver is not None:
+            driver.quit()
 
     # ── Phase 3: generate output ───────────────────────────────────────────────
     if not names:
